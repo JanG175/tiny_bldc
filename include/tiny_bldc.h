@@ -16,10 +16,6 @@
 #define PWM_TIMEBASE_RESOLUTION_HZ    1000000    // 1 MHz, 1 us per tick
 #define PWM_TIMEBASE_PERIOD           20000      // 20000 ticks, 20 ms, 50 Hz PWM frequency
 
-// #define PWM_TIMEBASE_RESOLUTION_HZ    10000000    // 10 MHz, 0.1 us per tick
-// #define PWM_TIMEBASE_PERIOD           200         // 200 ticks, 0.02 ms, 50 kHz PWM frequency
-
-
 #define PWM_MAX_PULSEWIDTH_US    2500
 #define PWM_MIN_PULSEWIDTH_US    1000
 
@@ -47,3 +43,5 @@ void tiny_bldc_deinit(tiny_bldc_conf_t* bldc_conf);
 void tiny_bldc_set_led(tiny_bldc_conf_t* bldc_conf, uint32_t led_state);
 
 void tiny_bldc_set_speed(tiny_bldc_conf_t* bldc_conf, uint32_t speed);
+
+uint32_t tiny_bldc_soft_start(tiny_bldc_conf_t* bldc_conf);

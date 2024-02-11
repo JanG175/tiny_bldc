@@ -73,7 +73,7 @@ void tiny_bldc_init(tiny_bldc_conf_t* bldc_conf)
     ESP_ERROR_CHECK(mcpwm_new_generator(bldc_conf->operator, &generator_config, &(bldc_conf->generator)));
 
     // set zero init speed
-    ESP_ERROR_CHECK(mcpwm_comparator_set_compare_value(bldc_conf->comparator, map_speed_to_compare(BLDC_MAX_SPEED)));
+    ESP_ERROR_CHECK(mcpwm_comparator_set_compare_value(bldc_conf->comparator, map_speed_to_compare(BLDC_MIN_SPEED)));
 
     ESP_ERROR_CHECK(mcpwm_generator_set_action_on_timer_event(bldc_conf->generator,
                                                                     MCPWM_GEN_TIMER_EVENT_ACTION(
@@ -144,4 +144,25 @@ void tiny_bldc_set_led(tiny_bldc_conf_t* bldc_conf, uint32_t led_state)
 void tiny_bldc_set_speed(tiny_bldc_conf_t* bldc_conf, uint32_t speed)
 {
     ESP_ERROR_CHECK(mcpwm_comparator_set_compare_value(bldc_conf->comparator, map_speed_to_compare(speed)));
+}
+
+
+/**
+ * @brief soft start the motor (recommended for the first start)
+ * 
+ * @param bldc_conf bldc config struct pointer
+ * 
+ * @return speed after soft start
+*/
+uint32_t tiny_bldc_soft_start(tiny_bldc_conf_t* bldc_conf)
+{
+    uint32_t end_speed = BLDC_MIN_SPEED + 100;
+
+    for (uint32_t i = BLDC_MIN_SPEED; i <= end_speed; i++)
+    {
+        tiny_bldc_set_speed(bldc_conf, i);
+        vTaskDelay(50 / portTICK_PERIOD_MS);
+    }
+
+    return end_speed;
 }

@@ -1,4 +1,4 @@
-# ESP-IDF component for tiny BLDC driver
+# ESP-IDF component for tiny BLDC motor driver
 
 ## Sources
 * https://docs.espressif.com/projects/esp-idf/en/v5.1.2/esp32s3/api-reference/peripherals/mcpwm.html

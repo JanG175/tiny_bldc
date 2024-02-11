@@ -34,16 +34,16 @@ static inline uint32_t map_speed_to_compare(uint32_t speed)
 */
 void tiny_bldc_init(tiny_bldc_conf_t* bldc_conf)
 {
-    // init DIR pin
+    // init LED pin
     gpio_config_t io_conf = {
         .intr_type = GPIO_INTR_DISABLE,
-        .pin_bit_mask = (1ULL << bldc_conf->dir_pin),
+        .pin_bit_mask = (1ULL << bldc_conf->led_pin),
         .mode = GPIO_MODE_OUTPUT,
         .pull_up_en = GPIO_PULLUP_DISABLE,
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
     };
     ESP_ERROR_CHECK(gpio_config(&io_conf));
-    gpio_set_level(bldc_conf->dir_pin, CW_DIR);
+    gpio_set_level(bldc_conf->led_pin, LED_ON);
 
     // init PWM pin
     mcpwm_timer_config_t timer_config = {
@@ -73,7 +73,7 @@ void tiny_bldc_init(tiny_bldc_conf_t* bldc_conf)
     ESP_ERROR_CHECK(mcpwm_new_generator(bldc_conf->operator, &generator_config, &(bldc_conf->generator)));
 
     // set zero init speed
-    ESP_ERROR_CHECK(mcpwm_comparator_set_compare_value(bldc_conf->comparator, map_speed_to_compare(0)));
+    ESP_ERROR_CHECK(mcpwm_comparator_set_compare_value(bldc_conf->comparator, map_speed_to_compare(BLDC_MAX_SPEED)));
 
     ESP_ERROR_CHECK(mcpwm_generator_set_action_on_timer_event(bldc_conf->generator,
                                                                     MCPWM_GEN_TIMER_EVENT_ACTION(
@@ -112,25 +112,26 @@ void tiny_bldc_deinit(tiny_bldc_conf_t* bldc_conf)
     bldc_conf->comparator = NULL;
     bldc_conf->generator = NULL;
 
-    gpio_reset_pin(bldc_conf->dir_pin);
+    gpio_reset_pin(bldc_conf->led_pin);
 }
 
 
 
 /**
- * @brief set the direction of the motor
+ * @brief set the state of the onboard LED
  * 
  * @param bldc_conf bldc config struct pointer
- * @param dir direction of the motor (CW_DIR or CCW_DIR)
+ * @param led_state state of the LED (LED_ON or LED_OFF)
 */
-void tiny_bldc_set_dir(tiny_bldc_conf_t* bldc_conf, uint8_t dir)
+void tiny_bldc_set_led(tiny_bldc_conf_t* bldc_conf, uint32_t led_state)
 {
-    if (dir == CW_DIR)
-        gpio_set_level(bldc_conf->dir_pin, CW_DIR);
-    else if (dir == CCW_DIR)
-        gpio_set_level(bldc_conf->dir_pin, CCW_DIR);
-    else
-        ESP_LOGE(TAG, "invalid direction");
+    if (led_state != LED_ON && led_state != LED_OFF)
+    {
+        ESP_LOGE(TAG, "Invalid LED state");
+        return;
+    }
+
+    gpio_set_level(bldc_conf->led_pin, led_state);
 }
 
 

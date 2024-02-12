@@ -13,11 +13,11 @@
 #include "driver/mcpwm_prelude.h"
 #include "esp_log.h"
 
-#define PWM_TIMEBASE_RESOLUTION_HZ    1000000    // 1 MHz, 1 us per tick
-#define PWM_TIMEBASE_PERIOD           20000      // 20000 ticks, 20 ms, 50 Hz PWM frequency
+#define PWM_TIMEBASE_RESOLUTION_HZ    1000000 // 1 MHz, 1 us per tick
+#define PWM_TIMEBASE_PERIOD           20000   // 20000 ticks, 20 ms, 50 Hz PWM frequency
 
-#define PWM_MAX_PULSEWIDTH_US    2500
-#define PWM_MIN_PULSEWIDTH_US    1000
+#define PWM_MAX_PULSEWIDTH_US         2500
+#define PWM_MIN_PULSEWIDTH_US         1000
 
 #define BLDC_MAX_SPEED    (PWM_MAX_PULSEWIDTH_US - PWM_MIN_PULSEWIDTH_US)
 #define BLDC_MIN_SPEED    0
@@ -25,10 +25,12 @@
 #define LED_ON     0
 #define LED_OFF    1
 
+// BLDC config struct
 typedef struct tiny_bldc_conf_t
 {
     gpio_num_t pwm_pin;
     gpio_num_t led_pin;
+    uint32_t group_id; // max 3 BLDC motors per group
     mcpwm_timer_handle_t timer;
     mcpwm_oper_handle_t operator;
     mcpwm_cmpr_handle_t comparator;

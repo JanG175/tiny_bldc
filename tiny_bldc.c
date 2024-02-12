@@ -47,7 +47,7 @@ void tiny_bldc_init(tiny_bldc_conf_t* bldc_conf)
 
     // init PWM pin
     mcpwm_timer_config_t timer_config = {
-        .group_id = 0,
+        .group_id = bldc_conf->group_id,
         .clk_src = MCPWM_TIMER_CLK_SRC_DEFAULT,
         .resolution_hz = PWM_TIMEBASE_RESOLUTION_HZ,
         .period_ticks = PWM_TIMEBASE_PERIOD,
@@ -56,7 +56,7 @@ void tiny_bldc_init(tiny_bldc_conf_t* bldc_conf)
     ESP_ERROR_CHECK(mcpwm_new_timer(&timer_config, &(bldc_conf->timer)));
 
     mcpwm_operator_config_t operator_config = {
-        .group_id = 0
+        .group_id = bldc_conf->group_id,
     };
     ESP_ERROR_CHECK(mcpwm_new_operator(&operator_config, &(bldc_conf->operator)));
 

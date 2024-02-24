@@ -35,15 +35,18 @@ static inline uint32_t map_speed_to_compare(uint32_t speed)
 void tiny_bldc_init(tiny_bldc_conf_t* bldc_conf)
 {
     // init LED pin
-    gpio_config_t io_conf = {
-        .intr_type = GPIO_INTR_DISABLE,
-        .pin_bit_mask = (1ULL << bldc_conf->led_pin),
-        .mode = GPIO_MODE_OUTPUT,
-        .pull_up_en = GPIO_PULLUP_DISABLE,
-        .pull_down_en = GPIO_PULLDOWN_DISABLE,
-    };
-    ESP_ERROR_CHECK(gpio_config(&io_conf));
-    gpio_set_level(bldc_conf->led_pin, LED_ON);
+    if (bldc_conf->led_pin != -1)
+    {
+        gpio_config_t io_conf = {
+            .intr_type = GPIO_INTR_DISABLE,
+            .pin_bit_mask = (1ULL << bldc_conf->led_pin),
+            .mode = GPIO_MODE_OUTPUT,
+            .pull_up_en = GPIO_PULLUP_DISABLE,
+            .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        };
+        ESP_ERROR_CHECK(gpio_config(&io_conf));
+        gpio_set_level(bldc_conf->led_pin, LED_ON);
+    }
 
     // init PWM pin
     mcpwm_timer_config_t timer_config = {
@@ -125,13 +128,18 @@ void tiny_bldc_deinit(tiny_bldc_conf_t* bldc_conf)
 */
 void tiny_bldc_set_led(tiny_bldc_conf_t* bldc_conf, uint32_t led_state)
 {
-    if (led_state != LED_ON && led_state != LED_OFF)
+    if (bldc_conf->led_pin != -1)
     {
-        ESP_LOGE(TAG, "Invalid LED state");
-        return;
-    }
+        if (led_state != LED_ON && led_state != LED_OFF)
+        {
+            ESP_LOGE(TAG, "Invalid LED state");
+            return;
+        }
 
-    gpio_set_level(bldc_conf->led_pin, led_state);
+        gpio_set_level(bldc_conf->led_pin, led_state);
+    }
+    else
+        ESP_LOGE(TAG, "No LED pin set");
 }
 
 

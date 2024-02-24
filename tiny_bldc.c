@@ -22,8 +22,15 @@ static const char *TAG = "tiny_bldc";
 */
 static inline uint32_t map_speed_to_compare(uint32_t speed)
 {
-    return (speed - BLDC_MIN_SPEED) * (PWM_MAX_PULSEWIDTH_US - PWM_MIN_PULSEWIDTH_US) /
-                (BLDC_MAX_SPEED - BLDC_MIN_SPEED) + PWM_MIN_PULSEWIDTH_US;
+    uint32_t compare = (speed - BLDC_MIN_SPEED) * (PWM_MAX_PULSEWIDTH_US - PWM_MIN_PULSEWIDTH_US) /
+                            (BLDC_MAX_SPEED - BLDC_MIN_SPEED) + PWM_MIN_PULSEWIDTH_US;
+
+#ifdef CONFIG_IDF_TARGET_ESP32C3
+    // set duty [%]: (2^SOC_LEDC_TIMER_BIT_WIDTH) * duty / 100
+    compare = (uint32_t)((float)(1 << LEDC_TIMER_BIT) / ((float)compare / (float)PWM_MAX_PULSEWIDTH_US));
+#endif
+
+    return compare;
 }
 
 
@@ -49,6 +56,8 @@ void tiny_bldc_init(tiny_bldc_conf_t* bldc_conf)
     }
 
     // init PWM pin
+
+#ifndef CONFIG_IDF_TARGET_ESP32C3
     mcpwm_timer_config_t timer_config = {
         .group_id = bldc_conf->group_id,
         .clk_src = MCPWM_TIMER_CLK_SRC_DEFAULT,
@@ -92,6 +101,27 @@ void tiny_bldc_init(tiny_bldc_conf_t* bldc_conf)
     // enable PWM
     ESP_ERROR_CHECK(mcpwm_timer_enable(bldc_conf->timer));
     ESP_ERROR_CHECK(mcpwm_timer_start_stop(bldc_conf->timer, MCPWM_TIMER_START_NO_STOP));
+#else
+    ledc_timer_config_t pwm_timer = {
+        .speed_mode = LEDC_SPEED_MODE_MAX,
+        .timer_num = bldc_conf->timer,
+        .duty_resolution = LEDC_TIMER_BIT,
+        .freq_hz = PWM_FREQUENCY,
+        .clk_cfg = LEDC_AUTO_CLK
+    };
+    ESP_ERROR_CHECK(ledc_timer_config(&pwm_timer));
+
+    ledc_channel_config_t pwm_channel = {
+        .speed_mode = LEDC_SPEED_MODE_MAX,
+        .channel = bldc_conf->channel,
+        .timer_sel = bldc_conf->timer,
+        .intr_type = LEDC_INTR_DISABLE,
+        .gpio_num = bldc_conf->pwm_pin,
+        .duty = 0,
+        .hpoint = 0
+    };
+    ESP_ERROR_CHECK(ledc_channel_config(&pwm_channel));
+#endif
 }
 
 
@@ -102,6 +132,7 @@ void tiny_bldc_init(tiny_bldc_conf_t* bldc_conf)
 */
 void tiny_bldc_deinit(tiny_bldc_conf_t* bldc_conf)
 {
+#ifndef CONFIG_IDF_TARGET_ESP32C3
     ESP_ERROR_CHECK(mcpwm_timer_start_stop(bldc_conf->timer, MCPWM_TIMER_STOP_EMPTY));
     ESP_ERROR_CHECK(mcpwm_timer_disable(bldc_conf->timer));
 
@@ -114,6 +145,9 @@ void tiny_bldc_deinit(tiny_bldc_conf_t* bldc_conf)
     bldc_conf->operator = NULL;
     bldc_conf->comparator = NULL;
     bldc_conf->generator = NULL;
+#else
+    ledc_stop(LEDC_SPEED_MODE_MAX, bldc_conf->channel, 0);
+#endif
 
     gpio_reset_pin(bldc_conf->led_pin);
 }
@@ -151,7 +185,18 @@ void tiny_bldc_set_led(tiny_bldc_conf_t* bldc_conf, uint32_t led_state)
 */
 void tiny_bldc_set_speed(tiny_bldc_conf_t* bldc_conf, uint32_t speed)
 {
+    if (speed < BLDC_MIN_SPEED || speed > BLDC_MAX_SPEED)
+    {
+        ESP_LOGE(TAG, "Invalid speed");
+        return;
+    }
+
+#ifndef CONFIG_IDF_TARGET_ESP32C3
     ESP_ERROR_CHECK(mcpwm_comparator_set_compare_value(bldc_conf->comparator, map_speed_to_compare(speed)));
+#else
+    ESP_ERROR_CHECK(ledc_set_duty(LEDC_SPEED_MODE_MAX, bldc_conf->channel, map_speed_to_compare(speed)));
+    ESP_ERROR_CHECK(ledc_update_duty(LEDC_SPEED_MODE_MAX, bldc_conf->channel));
+#endif
 }
 
 

@@ -41,8 +41,8 @@ typedef struct tiny_bldc_conf_t
     mcpwm_cmpr_handle_t comparator;
     mcpwm_gen_handle_t generator;
 #else
-    ledc_timer_t timer;
-    ledc_channel_t channel;
+    ledc_timer_t timer; // one timer for each BLDC motor
+    ledc_channel_t channel; // the same channel number as the timer
 #endif
 } tiny_bldc_conf_t;
 
@@ -54,5 +54,3 @@ void tiny_bldc_deinit(tiny_bldc_conf_t* bldc_conf);
 void tiny_bldc_set_led(tiny_bldc_conf_t* bldc_conf, uint32_t led_state);
 
 void tiny_bldc_set_speed(tiny_bldc_conf_t* bldc_conf, uint32_t speed);
-
-uint32_t tiny_bldc_soft_start(tiny_bldc_conf_t* bldc_conf);

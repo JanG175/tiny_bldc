@@ -27,7 +27,7 @@ static inline uint32_t map_speed_to_compare(uint32_t speed)
 
 #ifdef CONFIG_IDF_TARGET_ESP32C3
     // set duty [%]: (2^SOC_LEDC_TIMER_BIT_WIDTH) * duty / 100
-    compare = (uint32_t)((float)(1 << LEDC_TIMER_BIT) / ((float)compare / (float)PWM_MAX_PULSEWIDTH_US));
+    compare = (uint32_t)((float)(1 << LEDC_TIMER_BIT) * ((float)compare / (float)PWM_TIMEBASE_PERIOD));
 #endif
 
     return compare;
@@ -103,7 +103,7 @@ void tiny_bldc_init(tiny_bldc_conf_t* bldc_conf)
     ESP_ERROR_CHECK(mcpwm_timer_start_stop(bldc_conf->timer, MCPWM_TIMER_START_NO_STOP));
 #else
     ledc_timer_config_t pwm_timer = {
-        .speed_mode = LEDC_SPEED_MODE_MAX,
+        .speed_mode = LEDC_LOW_SPEED_MODE,
         .timer_num = bldc_conf->timer,
         .duty_resolution = LEDC_TIMER_BIT,
         .freq_hz = PWM_FREQUENCY,
@@ -112,7 +112,7 @@ void tiny_bldc_init(tiny_bldc_conf_t* bldc_conf)
     ESP_ERROR_CHECK(ledc_timer_config(&pwm_timer));
 
     ledc_channel_config_t pwm_channel = {
-        .speed_mode = LEDC_SPEED_MODE_MAX,
+        .speed_mode = LEDC_LOW_SPEED_MODE,
         .channel = bldc_conf->channel,
         .timer_sel = bldc_conf->timer,
         .intr_type = LEDC_INTR_DISABLE,
@@ -122,6 +122,9 @@ void tiny_bldc_init(tiny_bldc_conf_t* bldc_conf)
     };
     ESP_ERROR_CHECK(ledc_channel_config(&pwm_channel));
 #endif
+
+    tiny_bldc_set_speed(bldc_conf, BLDC_MIN_SPEED);
+    vTaskDelay(1250 / portTICK_PERIOD_MS);
 }
 
 
@@ -146,10 +149,11 @@ void tiny_bldc_deinit(tiny_bldc_conf_t* bldc_conf)
     bldc_conf->comparator = NULL;
     bldc_conf->generator = NULL;
 #else
-    ledc_stop(LEDC_SPEED_MODE_MAX, bldc_conf->channel, 0);
+    ledc_stop(LEDC_LOW_SPEED_MODE, bldc_conf->channel, 0);
 #endif
 
-    gpio_reset_pin(bldc_conf->led_pin);
+    if (bldc_conf->led_pin != -1)
+        gpio_reset_pin(bldc_conf->led_pin);
 }
 
 
@@ -194,28 +198,7 @@ void tiny_bldc_set_speed(tiny_bldc_conf_t* bldc_conf, uint32_t speed)
 #ifndef CONFIG_IDF_TARGET_ESP32C3
     ESP_ERROR_CHECK(mcpwm_comparator_set_compare_value(bldc_conf->comparator, map_speed_to_compare(speed)));
 #else
-    ESP_ERROR_CHECK(ledc_set_duty(LEDC_SPEED_MODE_MAX, bldc_conf->channel, map_speed_to_compare(speed)));
-    ESP_ERROR_CHECK(ledc_update_duty(LEDC_SPEED_MODE_MAX, bldc_conf->channel));
+    ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, bldc_conf->channel, map_speed_to_compare(speed)));
+    ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, bldc_conf->channel));
 #endif
-}
-
-
-/**
- * @brief soft start the motor (recommended for the first start)
- * 
- * @param bldc_conf bldc config struct pointer
- * 
- * @return speed after soft start
-*/
-uint32_t tiny_bldc_soft_start(tiny_bldc_conf_t* bldc_conf)
-{
-    uint32_t end_speed = BLDC_MIN_SPEED + 100;
-
-    for (uint32_t i = BLDC_MIN_SPEED; i <= end_speed; i++)
-    {
-        tiny_bldc_set_speed(bldc_conf, i);
-        vTaskDelay(50 / portTICK_PERIOD_MS);
-    }
-
-    return end_speed;
 }

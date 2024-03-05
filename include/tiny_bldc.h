@@ -20,11 +20,12 @@
 #define PWM_FREQUENCY                 50      // 50 Hz PWM frequency
 #define LEDC_TIMER_BIT                LEDC_TIMER_14_BIT
 
-#define PWM_MAX_PULSEWIDTH_US         2500
+#define PWM_MAX_PULSEWIDTH_US         2000
 #define PWM_MIN_PULSEWIDTH_US         1000
 
-#define BLDC_MAX_SPEED    (PWM_MAX_PULSEWIDTH_US - PWM_MIN_PULSEWIDTH_US)
-#define BLDC_MIN_SPEED    0
+#define BLDC_MAX_SPEED                (PWM_MAX_PULSEWIDTH_US - PWM_MIN_PULSEWIDTH_US)
+#define BLDC_MIN_SPEED                0
+#define BLDC_MIN_ROT_SPEED            (BLDC_MIN_SPEED + 100)
 
 #define LED_ON     0
 #define LED_OFF    1

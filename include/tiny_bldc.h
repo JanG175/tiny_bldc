@@ -55,3 +55,5 @@ void tiny_bldc_deinit(tiny_bldc_conf_t* bldc_conf);
 void tiny_bldc_set_led(tiny_bldc_conf_t* bldc_conf, uint32_t led_state);
 
 void tiny_bldc_set_speed(tiny_bldc_conf_t* bldc_conf, uint32_t speed);
+
+void tiny_bldc_arm(tiny_bldc_conf_t* bldc_conf);

@@ -202,3 +202,21 @@ void tiny_bldc_set_speed(tiny_bldc_conf_t* bldc_conf, uint32_t speed)
     ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, bldc_conf->channel));
 #endif
 }
+
+
+/**
+ * @brief arm the motor
+ *
+ * @param bldc_conf bldc config struct pointer
+*/
+void tiny_bldc_arm(tiny_bldc_conf_t* bldc_conf)
+{
+    tiny_bldc_set_speed(bldc_conf, BLDC_MIN_SPEED);
+    vTaskDelay(20 / portTICK_PERIOD_MS);
+
+    tiny_bldc_set_speed(bldc_conf, BLDC_MIN_ROT_SPEED);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+    tiny_bldc_set_speed(bldc_conf, BLDC_MIN_SPEED);
+    vTaskDelay(20 / portTICK_PERIOD_MS);
+}

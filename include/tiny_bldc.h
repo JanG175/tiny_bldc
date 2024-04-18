@@ -25,7 +25,7 @@
 
 #define BLDC_MAX_SPEED                (PWM_MAX_PULSEWIDTH_US - PWM_MIN_PULSEWIDTH_US)
 #define BLDC_MIN_SPEED                0
-#define BLDC_MIN_ROT_SPEED            (BLDC_MIN_SPEED + 150)
+#define BLDC_MIN_ROT_SPEED            (BLDC_MIN_SPEED + 40)
 
 #define LED_ON     0
 #define LED_OFF    1
@@ -56,4 +56,6 @@ void tiny_bldc_set_led(tiny_bldc_conf_t* bldc_conf, uint32_t led_state);
 
 void tiny_bldc_set_speed(tiny_bldc_conf_t* bldc_conf, uint32_t speed);
 
-void tiny_bldc_arm(tiny_bldc_conf_t* bldc_conf);
+void tiny_bldc_arm(tiny_bldc_conf_t* bldc_conf, uint8_t motors_num);
+
+void tiny_bldc_calibrate(tiny_bldc_conf_t* bldc_conf, uint8_t motors_number);

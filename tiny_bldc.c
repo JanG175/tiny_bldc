@@ -123,8 +123,8 @@ void tiny_bldc_init(tiny_bldc_conf_t* bldc_conf)
     ESP_ERROR_CHECK(ledc_channel_config(&pwm_channel));
 #endif
 
+    // set zero speed
     tiny_bldc_set_speed(bldc_conf, BLDC_MIN_SPEED);
-    vTaskDelay(1250 / portTICK_PERIOD_MS);
 }
 
 
@@ -205,18 +205,48 @@ void tiny_bldc_set_speed(tiny_bldc_conf_t* bldc_conf, uint32_t speed)
 
 
 /**
- * @brief arm the motor
+ * @brief arm the motors
  *
  * @param bldc_conf bldc config struct pointer
+ * @param motors_num number of motors
 */
-void tiny_bldc_arm(tiny_bldc_conf_t* bldc_conf)
+void tiny_bldc_arm(tiny_bldc_conf_t* bldc_conf, uint8_t motors_num)
 {
-    tiny_bldc_set_speed(bldc_conf, BLDC_MIN_SPEED);
+    vTaskDelay(1500 / portTICK_PERIOD_MS);
+
+    for (uint32_t i = 0; i < motors_num; i++)
+       tiny_bldc_set_speed(&bldc_conf[i], BLDC_MIN_SPEED);
     vTaskDelay(20 / portTICK_PERIOD_MS);
 
-    tiny_bldc_set_speed(bldc_conf, BLDC_MIN_ROT_SPEED);
+    for (uint32_t i = 0; i < motors_num; i++)
+        tiny_bldc_set_speed(&bldc_conf[i], BLDC_MIN_ROT_SPEED);
     vTaskDelay(1000 / portTICK_PERIOD_MS);
 
-    tiny_bldc_set_speed(bldc_conf, BLDC_MIN_SPEED);
+    for (uint32_t i = 0; i < motors_num; i++)
+        tiny_bldc_set_speed(&bldc_conf[i], BLDC_MIN_SPEED);
     vTaskDelay(20 / portTICK_PERIOD_MS);
+
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
+}
+
+
+/**
+ * @brief calibrate the motors
+ * 
+ * @param bldc_conf bldc config struct pointer
+ * @param motors_num number of motors
+*/
+void tiny_bldc_calibrate(tiny_bldc_conf_t* bldc_conf, uint8_t motors_num)
+{
+    for (uint32_t i = 0; i < motors_num; i++)
+        tiny_bldc_set_speed(&bldc_conf[i], BLDC_MIN_SPEED);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+    for (uint32_t i = 0; i < motors_num; i++)
+        tiny_bldc_set_speed(&bldc_conf[i], BLDC_MAX_SPEED);
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
+
+    for (uint32_t i = 0; i < motors_num; i++)
+        tiny_bldc_set_speed(&bldc_conf[i], BLDC_MIN_SPEED);
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
 }

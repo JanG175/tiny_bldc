@@ -1,13 +1,17 @@
 # ESP-IDF component for tiny BLDC motor driver
+Currently compatible with BLHeli_S ESC drivers with PWM interface.
 
 ## Notes
 * In one timer group there can be max 3 BLDC motors.
-* It is recommended to wait a bit (f.e. 2 s) after the arming sequence.
+
+## BLHeliSuite configuration
+![BLHeliSuite](images/BLHeliSuiteSiLabs_ESC_Setup.png)
 
 ## Sources
 * https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32/api-reference/peripherals/mcpwm.html
 * https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32c3/api-reference/peripherals/ledc.html
-* https://pl.aliexpress.com/item/1005006189595049.html?spm=a2g0o.order_list.order_list_main.9.21ef1c24u5zhpX&gatewayAdapt=glo2pol
+* https://github.com/bitdump/BLHeli/tree/master
+* https://pl.aliexpress.com/item/4000196497081.html
 
 ## Example
 ``` C
@@ -70,12 +74,7 @@ void app_main(void)
 #endif
 
     // arming
-    for (uint32_t i = 0; i < BLDC_NUM; i++)
-    {
-        speed[i] = BLDC_MIN_SPEED;
-        tiny_bldc_arm(&bldc_conf[i]);
-    }
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
+    tiny_bldc_arm(bldc_conf, BLDC_NUM);
 
     ESP_LOGI(TAG, "start");
 

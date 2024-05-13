@@ -25,16 +25,12 @@
 
 #define BLDC_MAX_SPEED                (PWM_MAX_PULSEWIDTH_US - PWM_MIN_PULSEWIDTH_US)
 #define BLDC_MIN_SPEED                0
-#define BLDC_MIN_ROT_SPEED            (BLDC_MIN_SPEED + 40)
-
-#define LED_ON     0
-#define LED_OFF    1
+#define BLDC_MIN_ROT_SPEED            (BLDC_MIN_SPEED + 50)
 
 // BLDC config struct
 typedef struct tiny_bldc_conf_t
 {
     gpio_num_t pwm_pin;
-    gpio_num_t led_pin;
 #ifndef CONFIG_IDF_TARGET_ESP32C3
     uint32_t group_id; // max 3 BLDC motors per group
     mcpwm_timer_handle_t timer;

@@ -41,22 +41,7 @@ static inline uint32_t map_speed_to_compare(uint32_t speed)
 */
 void tiny_bldc_init(tiny_bldc_conf_t* bldc_conf)
 {
-    // init LED pin
-    if (bldc_conf->led_pin != -1)
-    {
-        gpio_config_t io_conf = {
-            .intr_type = GPIO_INTR_DISABLE,
-            .pin_bit_mask = (1ULL << bldc_conf->led_pin),
-            .mode = GPIO_MODE_OUTPUT,
-            .pull_up_en = GPIO_PULLUP_DISABLE,
-            .pull_down_en = GPIO_PULLDOWN_DISABLE,
-        };
-        ESP_ERROR_CHECK(gpio_config(&io_conf));
-        gpio_set_level(bldc_conf->led_pin, LED_ON);
-    }
-
     // init PWM pin
-
 #ifndef CONFIG_IDF_TARGET_ESP32C3
     mcpwm_timer_config_t timer_config = {
         .group_id = bldc_conf->group_id,
@@ -151,33 +136,6 @@ void tiny_bldc_deinit(tiny_bldc_conf_t* bldc_conf)
 #else
     ledc_stop(LEDC_LOW_SPEED_MODE, bldc_conf->channel, 0);
 #endif
-
-    if (bldc_conf->led_pin != -1)
-        gpio_reset_pin(bldc_conf->led_pin);
-}
-
-
-
-/**
- * @brief set the state of the onboard LED
- * 
- * @param bldc_conf bldc config struct pointer
- * @param led_state state of the LED (LED_ON or LED_OFF)
-*/
-void tiny_bldc_set_led(tiny_bldc_conf_t* bldc_conf, uint32_t led_state)
-{
-    if (bldc_conf->led_pin != -1)
-    {
-        if (led_state != LED_ON && led_state != LED_OFF)
-        {
-            ESP_LOGE(TAG, "Invalid LED state");
-            return;
-        }
-
-        gpio_set_level(bldc_conf->led_pin, led_state);
-    }
-    else
-        ESP_LOGE(TAG, "No LED pin set");
 }
 
 
@@ -225,8 +183,6 @@ void tiny_bldc_arm(tiny_bldc_conf_t* bldc_conf, uint8_t motors_num)
     for (uint32_t i = 0; i < motors_num; i++)
         tiny_bldc_set_speed(&bldc_conf[i], BLDC_MIN_SPEED);
     vTaskDelay(20 / portTICK_PERIOD_MS);
-
-    vTaskDelay(5000 / portTICK_PERIOD_MS);
 }
 
 
